@@ -29,6 +29,7 @@
   --f-lcd:'VT323', 'Courier New', monospace;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none !important}
 html,body{margin:0;height:100%;background:var(--body);color:var(--bone);font-family:var(--f-ui);overscroll-behavior:none}
 body{position:fixed;inset:0;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 button{font:inherit;color:inherit;cursor:pointer}
@@ -51,7 +52,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   border:1px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .round[aria-pressed="true"]{background:var(--lcd);color:#1b1917;border-color:var(--lcd)}
 .round svg{width:22px;height:22px}
-.rec-badge{position:absolute;left:50%;top:calc(var(--safe-t) + 14px);transform:translateX(-50%);display:flex;gap:8px;align-items:center;
+.rec-badge{position:absolute;z-index:7;left:50%;top:calc(var(--safe-t) + 14px);transform:translateX(-50%);display:flex;gap:8px;align-items:center;
   background:rgba(27,25,23,.75);border:1px solid var(--rec);border-radius:999px;padding:4px 12px;font-family:var(--f-lcd);font-size:22px;line-height:1}
 .rec-badge i{width:10px;height:10px;border-radius:50%;background:var(--rec);animation:blink 1s steps(2,jump-none) infinite}
 @keyframes blink{50%{opacity:.15}}
@@ -77,13 +78,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--bone);color:#1b1917}
 
 /* ---------- adjust panel ---------- */
-.panel{display:none;margin:0 12px;padding:14px 16px 16px;border-radius:16px;max-height:40vh;overflow:auto;
-  background:rgba(34,32,29,.86);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.panel{display:none;margin:0 12px;padding:14px 16px 16px;border-radius:16px;max-height:44vh;overflow:auto;
+  background:rgba(34,32,29,.88);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .panel.open{display:block}
 .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
 .p-name{font-family:var(--f-display);font-weight:700;font-size:14px}
-.p-tag{font-size:12.5px;color:var(--dim);margin-top:3px;line-height:1.3}
-.ghost{background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px}
+.p-tag{font-size:12.5px;color:var(--dim);margin-top:3px;line-height:1.3;max-width:46ch}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;white-space:nowrap}
 .sliders{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
 .sl{display:block}
 .sl-top{display:flex;justify-content:space-between;font-size:13px;color:var(--bone)}
@@ -95,16 +96,20 @@ input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:v
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--bone);border:0;margin-top:-8px;box-shadow:0 1px 6px rgba(0,0,0,.6)}
 input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--bone);border:0}
 .opts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.opts + .opts{margin-top:10px;padding-top:0;border-top:0}
 .tog{border:1px solid var(--line);background:transparent;border-radius:999px;padding:7px 12px;font-size:13px;color:var(--dim)}
 .tog[aria-pressed="true"]{border-color:var(--lcd);color:var(--lcd)}
 .opts .seg{justify-self:auto;margin-left:auto}
+.clock{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.clock label{font-size:13px;color:var(--dim)}
+.clock input{color-scheme:dark;background:var(--plate);color:var(--bone);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:500 13px var(--f-ui);min-width:0}
 
 @media (min-width:900px){
-  .panel{position:fixed;right:16px;top:70px;bottom:16px;width:330px;max-height:none;margin:0}
+  .panel{position:fixed;right:16px;top:70px;bottom:16px;width:340px;max-height:none;margin:0}
   .sliders{grid-template-columns:1fr}
-  #app.panel-open #stage{right:346px}
-  #app.panel-open .dock{right:346px}
-  #app.panel-open .topbar{right:346px}
+  #app.panel-open #stage{right:356px}
+  #app.panel-open .dock{right:356px}
+  #app.panel-open .topbar{right:356px}
   .look{width:104px}
 }
 
@@ -171,8 +176,16 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       </div>
       <div id="sliders" class="sliders"></div>
       <div class="opts">
-        <button id="togOverlay" class="tog" type="button" aria-pressed="true">Overlay text</button>
+        <button id="togStamp" class="tog" type="button" aria-pressed="false">Date and time</button>
+        <button id="togUnits" class="tog" type="button" aria-pressed="false">Display units</button>
         <button id="togAudio" class="tog" type="button" aria-pressed="true">Record sound</button>
+      </div>
+      <div class="clock">
+        <label for="dtIn">Stamp date</label>
+        <input id="dtIn" type="datetime-local" step="1">
+        <button id="dtNow" class="ghost" type="button">Use now</button>
+      </div>
+      <div class="opts">
         <div id="qSeg" class="seg" role="group" aria-label="Render quality">
           <button type="button" data-q="960" aria-pressed="false">Fast</button>
           <button type="button" data-q="1280" aria-pressed="true">Balanced</button>
@@ -201,7 +214,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <i style="background:#e8e0cf"></i><i style="background:#f2d13a"></i><i style="background:#2fd0d0"></i><i style="background:#39c060"></i><i style="background:#d64bb4"></i><i style="background:#e04a32"></i><i style="background:#3a55d6"></i>
     </div>
     <h1>Retro<br><span>Cam</span></h1>
-    <p>Ten analog looks, applied live to your camera. Everything runs on your device and nothing is uploaded.</p>
+    <p>Eleven analog looks, applied live to your camera. Everything runs on your device and nothing is uploaded.</p>
     <div class="row">
       <button id="startBtn" class="btn-primary" type="button">Start camera</button>
       <button id="demoBtn" class="btn-ghost" type="button">Try with a demo scene</button>
@@ -228,12 +241,41 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
 /* =====================================================================
    SHADERS
-   One fragment shader holds all ten looks. uLook picks the branch.
+   Pass 1 (ACC): blends each new camera frame into a "history" texture.
+                 Luma and chroma decay at different rates, like tape and
+                 phosphor lag. This is what makes motion trails.
+   Pass 2 (FS):  reads the history and applies the selected look.
    ===================================================================== */
 const VS = `
 attribute vec2 aPos;
 varying vec2 vUv;
 void main(){ vUv = aPos*0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }
+`;
+
+const ACC = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+varying vec2 vUv;
+uniform sampler2D uCur;
+uniform sampler2D uPrev;
+uniform float uP, uPC, uReset;
+vec3 toYuv(vec3 c){ float y = dot(c, vec3(0.299, 0.587, 0.114)); return vec3(y, 0.492*(c.b - y), 0.877*(c.r - y)); }
+vec3 fromYuv(vec3 c){ float r = c.x + c.z/0.877; float b = c.x + c.y/0.492; float g = (c.x - 0.299*r - 0.114*b)/0.587; return vec3(r, g, b); }
+void main(){
+  vec3 cur = toYuv(texture2D(uCur, vUv).rgb);
+  vec3 prv = toYuv(texture2D(uPrev, vUv).rgb);
+  vec3 d = cur - prv;
+  vec3 st = d * vec3(1.0 - uP, 1.0 - uPC, 1.0 - uPC);
+  vec3 mn = sign(d) * (1.5/255.0);
+  st = mix(st, mn, step(abs(st), vec3(1.5/255.0)));
+  st = sign(d) * min(abs(st), abs(d));
+  vec3 o = prv + st;
+  if(uReset > 0.5) o = cur;
+  gl_FragColor = vec4(clamp(fromYuv(o), 0.0, 1.0), 1.0);
+}
 `;
 
 const FS = `
@@ -243,10 +285,17 @@ precision highp float;
 precision mediump float;
 #endif
 varying vec2 vUv;
+uniform sampler2D uRaw;
 uniform sampler2D uTex;
+uniform sampler2D uSnap;
+uniform sampler2D uOsd;
 uniform vec2  uRes;
 uniform float uTime, uLook, uIntensity, uGrain, uDistort, uBleed, uScan, uVig, uWarm, uMirror;
+uniform float uComb, uField, uOsdOn, uOsdChain, uFlash, uAltChan;
 #define PI 3.14159265
+
+float sstep(float a, float b, float x){ float t = clamp((x - a)/(b - a), 0.0, 1.0); return t*t*(3.0 - 2.0*t); }
+#define smoothstep(a, b, x) sstep(a, b, x)
 
 float hash(vec2 p){
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -265,11 +314,29 @@ float vnoise(vec2 p){
 float frameIdx(float rate){ return mod(floor(uTime*rate), 251.0); }
 float asp(){ return uRes.x / uRes.y; }
 
-vec3 samp(vec2 uv){
-  uv = 1.0 - abs(1.0 - mod(uv, 2.0));
-  if(uMirror > 0.5) uv.x = 1.0 - uv.x;
-  return texture2D(uTex, uv).rgb;
+vec2 rep(vec2 uv){ return 1.0 - abs(1.0 - mod(uv, 2.0)); }
+vec2 mirr(vec2 uv){ if(uMirror > 0.5) uv.x = 1.0 - uv.x; return uv; }
+
+vec4 osdAt(vec2 uv){
+  float inb = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
+  vec4 o = texture2D(uOsd, clamp(uv, 0.0, 1.0));
+  o.a *= inb * uOsdOn;
+  return o;
 }
+vec3 sampRaw(vec2 uv){ return texture2D(uRaw, mirr(rep(uv))).rgb; }
+vec3 sampS(vec2 uv){ return texture2D(uSnap, mirr(rep(uv))).rgb; }
+vec3 samp(vec2 uv){
+  vec2 u = mirr(rep(uv));
+  vec3 h = texture2D(uTex, u).rgb;
+  if(uComb > 0.0){
+    vec3 r = texture2D(uRaw, u).rgb;
+    float f = mod(floor(gl_FragCoord.y) + uField, 2.0);
+    h = mix(h, r, uComb * (1.0 - f));
+  }
+  if(uOsdChain > 0.5){ vec4 o = osdAt(uv); h = mix(h, o.rgb, o.a); }
+  return h;
+}
+
 float luma(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
 vec3 saturate3(vec3 c, float s){ return mix(vec3(luma(c)), c, s); }
 vec3 warmth(vec3 c, float w){ return c * vec3(1.0 + 0.22*w, 1.0 + 0.04*w, 1.0 - 0.28*w); }
@@ -292,6 +359,14 @@ vec3 soft(vec2 uv, float r){
   c += samp(uv + vec2(0.0, o.y))*0.16;
   c += samp(uv - vec2(0.0, o.y))*0.16;
   return c;
+}
+vec3 blur9(vec2 uv, float r){
+  vec3 acc = samp(uv)*0.2;
+  for(int i = 0; i < 8; i++){
+    float a = float(i)*0.785398;
+    acc += samp(uv + vec2(cos(a), sin(a)*asp())*r)*0.1;
+  }
+  return acc;
 }
 vec3 bloom(vec2 uv, float radius, float thresh){
   vec3 acc = vec3(0.0);
@@ -334,8 +409,60 @@ vec2 filmDamage(vec2 uv, float rate, float amt){
   return vec2(bright, dark) * amt;
 }
 
+/* ---- analog video helpers ---- */
+/* horizontal edge overshoot (analog sharpening halo), luma only */
+float ringD(vec2 uv, float k){
+  vec2 o = vec2(2.0/uRes.x, 0.0);
+  float l0 = luma(samp(uv));
+  float lb = 0.25*luma(samp(uv - o)) + 0.5*l0 + 0.25*luma(samp(uv + o));
+  return (l0 - lb) * k;
+}
+/* composite luma/chroma crosstalk: crawling checker dots on edges */
+vec3 dotCrawl(vec2 uv, vec3 c, float amt){
+  vec2 o = vec2(2.0/uRes.x, 0.0);
+  float e = luma(samp(uv + o)) - luma(samp(uv - o));
+  float ph = (floor(uv.x*uRes.x*0.5) + floor(uv.y*uRes.y*0.5) + floor(uTime*30.0)) * PI;
+  float s = cos(ph);
+  return c + vec3(s, -s*0.5, -s) * abs(e) * amt * 0.5;
+}
+/* chroma-only noise in soft horizontal blobs */
+vec3 chromaNoise(vec2 uv, float amt, float fr){
+  vec2 p = floor(uv * uRes / vec2(6.0, 2.0));
+  vec2 n = vec2(hash(p + fr*3.1), hash(p + fr*3.1 + 9.7)) - 0.5;
+  return yiq2rgb(vec3(0.0, n*amt));
+}
+vec3 testBars(vec2 uv){
+  uv = fract(uv);
+  float y = 1.0 - uv.y;
+  float i = floor(uv.x*7.0);
+  vec3 col = vec3(0.0);
+  if(y < 0.66){
+    if(i < 0.5) col = vec3(0.75);
+    else if(i < 1.5) col = vec3(0.75, 0.75, 0.0);
+    else if(i < 2.5) col = vec3(0.0, 0.75, 0.75);
+    else if(i < 3.5) col = vec3(0.0, 0.75, 0.0);
+    else if(i < 4.5) col = vec3(0.75, 0.0, 0.75);
+    else if(i < 5.5) col = vec3(0.75, 0.0, 0.0);
+    else col = vec3(0.0, 0.0, 0.75);
+  }else if(y < 0.75){
+    if(i < 0.5) col = vec3(0.0, 0.0, 0.75);
+    else if(i < 2.5 && i > 1.5) col = vec3(0.75, 0.0, 0.75);
+    else if(i < 4.5 && i > 3.5) col = vec3(0.0, 0.75, 0.75);
+    else if(i > 5.5) col = vec3(0.75);
+    else col = vec3(0.07);
+  }else{
+    float j = floor(uv.x*6.0);
+    if(j < 1.5) col = vec3(0.0, 0.13, 0.30);
+    else if(j < 2.5) col = vec3(1.0);
+    else if(j < 3.5) col = vec3(0.20, 0.0, 0.40);
+    else col = vec3(0.07);
+  }
+  return col;
+}
+
 /* ---------------- 0  Disposable camera ---------------- */
 vec3 disposable(vec2 uv){
+  vec2 suv = uv;
   float fr = frameIdx(8.0);
   vec2 q = uv - 0.5;
   float r2 = dot(q, q);
@@ -353,6 +480,8 @@ vec3 disposable(vec2 uv){
   float leak = smoothstep(0.42, 0.0, uv.x + 0.06*sin(uTime*0.6 + uv.y*3.0));
   leak += 0.5*smoothstep(0.3, 0.0, (1.0 - uv.y) + (1.0 - uv.x)*0.6);
   c += vec3(1.0, 0.38, 0.12) * leak * (0.12 + 0.5*uBleed) * (0.6 + 0.4*sin(uTime*0.5 + 1.0));
+  vec4 o = osdAt(suv);
+  c = mix(c, o.rgb, o.a);
   c += grainAt(uv, 1.6, fr) * 0.35 * uGrain * (1.2 - l);
   vec2 dm = filmDamage(uv, 8.0, uScan);
   c = mix(c, vec3(1.0), clamp(dm.x, 0.0, 1.0)*0.5);
@@ -361,32 +490,107 @@ vec3 disposable(vec2 uv){
   return c;
 }
 
-/* ---------------- 1  VHS camcorder ---------------- */
+/* ---------------- 1  2000s handycam (MiniDV) ---------------- */
+vec3 handycam(vec2 uv){
+  vec2 suv = uv;
+  float t = uTime;
+  float fr = frameIdx(30.0);
+  /* handheld shake: slow drift + tiny per-frame jitter */
+  vec2 sh = (vec2(vnoise(vec2(t*1.7, 1.0)), vnoise(vec2(t*1.4, 7.0))) - 0.5) * 0.014 * uDistort
+          + (vec2(hash(vec2(fr, 1.0)), hash(vec2(fr, 2.0))) - 0.5) * 0.0012 * uDistort;
+  uv = 0.5 + (uv - 0.5)*(1.0 - 0.02*uDistort) + sh;
+  /* autofocus hunting: now and then the picture breathes out of focus */
+  float hunt = smoothstep(0.82, 1.0, sin(t*0.45)*0.5 + 0.5 + (vnoise(vec2(t*0.3, 3.0)) - 0.5)*0.4) * uDistort;
+  vec2 q = uv - 0.5;
+  vec2 ab = q * 0.010 * uBleed;
+  vec3 c = vec3(samp(uv + ab).r, samp(uv).g, samp(uv - ab).b);
+  c = mix(c, soft(uv, 0.0009), 0.5);
+  if(hunt > 0.01) c = mix(c, blur9(uv, 0.007), clamp(hunt, 0.0, 1.0));
+  float l0 = luma(c);
+  /* DV over-sharpening halo */
+  c += vec3(ringD(uv, 0.7) * (1.0 - hunt));
+  /* CCD vertical smear from bright lights */
+  float sm = 0.0;
+  for(int i = 0; i < 6; i++){
+    float off = float(i + 1)*0.035;
+    sm += (max(luma(samp(uv + vec2(0.0, off))) - 0.88, 0.0) + max(luma(samp(uv - vec2(0.0, off))) - 0.88, 0.0)) / float(i + 1);
+  }
+  c += vec3(0.85, 0.95, 1.0) * sm * 0.18;
+  c += bloom(uv, 0.008, 0.8) * 2.0;
+  /* purple fringing on bright edges */
+  float e = abs(luma(samp(uv + vec2(2.0/uRes.x, 0.0))) - luma(samp(uv - vec2(2.0/uRes.x, 0.0))));
+  c += vec3(0.55, 0.0, 0.75) * e * (0.2 + 0.6*uBleed) * smoothstep(0.5, 0.9, l0);
+  /* vivid CCD colour, slightly cool */
+  c = scurve(c, 0.5);
+  c = saturate3(c, 1.18);
+  c *= vec3(0.98, 1.0, 1.03);
+  c = warmth(c, uWarm);
+  /* auto white balance drift + exposure pumping */
+  float drift = sin(t*0.23);
+  c *= vec3(1.0 + 0.025*drift, 1.0, 1.0 - 0.025*drift) * (1.0 + 0.04*uDistort*sin(t*0.4));
+  /* DV 8x8 macroblocking in flat areas */
+  vec2 g8 = uRes / 8.0;
+  vec3 bc = samp((floor(uv*g8) + 0.5) / g8);
+  float flatness = 1.0 - smoothstep(0.0, 0.06, e);
+  c = mix(c, bc, uScan * 0.35 * flatness * (1.0 - l0*0.5));
+  /* low-light gain noise: coloured speckle, worst in the shadows */
+  float dk = 1.0 - clamp(l0*1.4, 0.0, 1.0);
+  vec2 np = floor(uv*uRes/1.7);
+  vec3 nz = vec3(hash(np + fr*1.3), hash(np + fr*1.3 + 5.1), hash(np + fr*1.3 + 9.2)) - 0.5;
+  c += (vec3(nz.x)*0.7 + nz*0.5) * (0.05 + 0.25*dk*dk) * uGrain;
+  c *= scanl(uv, 480.0, uScan*0.22);
+  c *= vignette(uv, uVig*0.8);
+  /* crisp on-screen display from the camcorder itself */
+  vec4 o = osdAt(suv);
+  c = mix(c, o.rgb, o.a);
+  return c;
+}
+
+/* ---------------- 2  VHS camcorder ---------------- */
 vec3 vhs(vec2 uv){
   float t = uTime;
   float fr = frameIdx(30.0);
   float line = floor(uv.y * 240.0);
-  float jit = (hash(vec2(line, fr)) - 0.5) * 0.006 * uDistort;
+  float jit = (hash(vec2(line, fr)) - 0.5) * 0.005 * uDistort;
   float wob = (sin(uv.y*7.0 + t*1.7)*0.0025 + sin(uv.y*31.0 - t*4.3)*0.0008) * uDistort;
+  /* head skew at the top of the frame */
+  float flag = smoothstep(0.94, 1.0, uv.y);
+  float flagShift = flag*flag*(0.03 + 0.02*sin(t*3.0 + uv.y*40.0)) * uDistort;
   float bandY = fract(t*0.07);
   float band = smoothstep(0.05, 0.0, abs(uv.y - bandY));
   float tear = band * (hash(vec2(line, fr + 3.0)) - 0.4) * 0.07 * uDistort;
   float hsz = smoothstep(0.07, 0.0, uv.y);
   float hs = hsz*hsz * (0.02 + 0.06*hash(vec2(line, fr + 9.0))) * uDistort * 1.5;
-  uv.x += jit + wob + tear + hs;
+  uv.x += jit + wob + flagShift + tear + hs;
 
   float bw = 0.006 + 0.02*uBleed;
-  vec3 yiq = rgb2yiq(mix(samp(uv), soft(uv, 0.0016), 0.5));
+  vec3 y0 = rgb2yiq(mix(samp(uv), soft(uv, 0.0016), 0.5));
   vec2 ch = vec2(0.0);
   for(int i = 0; i < 8; i++){
     float f = float(i) / 7.0;
     ch += rgb2yiq(samp(uv - vec2(f*bw*2.0 + bw*0.5, 0.0))).yz;
   }
   ch /= 8.0;
-  vec3 c = yiq2rgb(vec3(yiq.x, ch*1.25));
+  vec3 c = yiq2rgb(vec3(y0.x, ch*1.25));
+  c += vec3(ringD(uv, 0.5));
+  c = dotCrawl(uv, c, 0.5*uBleed);
+  c += chromaNoise(uv, 0.35*uGrain, fr);
   c = c*0.9 + vec3(0.03, 0.02, 0.05);
   c = scurve(c, 0.25);
   c = warmth(c, uWarm);
+
+  /* tape dropouts: short white streaks */
+  float dr = 0.0;
+  for(int i = 0; i < 3; i++){
+    float fi = float(i);
+    float lineR = floor(hash(vec2(fr, 20.0 + fi))*240.0);
+    float x0 = hash(vec2(fr, 30.0 + fi));
+    float len = 0.03 + 0.12*hash(vec2(fr, 40.0 + fi));
+    float on = step(0.6, hash(vec2(fr, 50.0 + fi)));
+    dr += on * step(abs(line - lineR), 0.5) * step(x0, uv.x) * step(uv.x, x0 + len);
+  }
+  c = mix(c, vec3(0.95), clamp(dr, 0.0, 1.0) * 0.85 * (0.3 + uDistort));
+
   float n = hash(vec2(uv.x*uRes.x*0.5, line) + fr*7.13);
   c += (n - 0.5) * 0.18 * uGrain;
   float n2 = hash(vec2(floor(uv.x*uRes.x/3.0), line + fr));
@@ -398,7 +602,7 @@ vec3 vhs(vec2 uv){
   return c;
 }
 
-/* ---------------- 2  Glitchy old TV ---------------- */
+/* ---------------- 3  Glitchy old TV ---------------- */
 vec3 glitchtv(vec2 uv){
   float tb = mod(floor(uTime*10.0), 199.0);
   float burst = step(0.55, hash(vec2(tb, 9.1)));
@@ -408,6 +612,8 @@ vec3 glitchtv(vec2 uv){
   float hit = step(0.72, hash(vec2(row, tb + 3.0)));
   float shift = (hash(vec2(row, tb)) - 0.5) * 0.35 * uDistort * hit * burst * (1.0 + mega);
   uv.x += shift;
+  float stretchRow = step(0.9, hash(vec2(row + 17.0, tb))) * burst;
+  uv.x = mix(uv.x, floor(uv.x*6.0)/6.0 + 0.08*hash(vec2(row, tb + 5.0)), stretchRow * uDistort);
   vec2 blk = floor(uv * vec2(6.0, 10.0));
   float bh = step(0.93, hash(blk + tb*1.7)) * burst;
   uv.y += bh * (hash(blk + tb) - 0.5) * 0.2 * uDistort;
@@ -428,26 +634,34 @@ vec3 glitchtv(vec2 uv){
   return c;
 }
 
-/* ---------------- 3  Old TV with static ---------------- */
+/* ---------------- 4  Old TV with static ---------------- */
 vec3 statictv(vec2 uv){
   float t = uTime;
   float fr = frameIdx(30.0);
-  uv.x += (sin(uv.y*22.0 + t*5.0)*0.003 + sin(uv.y*3.0 + t*1.3)*0.006*sin(t*0.7)) * uDistort;
+  float weak = smoothstep(0.2, 1.0, sin(t*0.8)*0.5 + 0.5 + (vnoise(vec2(t*1.5, 4.0)) - 0.5)*0.6);
+  uv.x += (sin(uv.y*22.0 + t*5.0)*0.003 + sin(uv.y*3.0 + t*1.3)*0.006*sin(t*0.7)) * uDistort * (0.5 + weak);
+  uv.x += (hash(vec2(floor(uv.y*240.0), fr)) - 0.5) * 0.004 * uDistort * weak;
+  float flag = smoothstep(0.93, 1.0, uv.y);
+  uv.x += flag*flag*0.035*sin(t*4.0 + uv.y*30.0)*uDistort;
   uv.y += (sin(t*0.9)*0.002 + (hash(vec2(fr, 3.0)) - 0.5)*0.004) * uDistort;
   float jump = step(0.985, hash(vec2(floor(t*6.0), 8.0)));
   uv.y = fract(uv.y + jump*0.15*uDistort);
   float sp = 0.002 + 0.008*uBleed;
   vec3 c = vec3(samp(uv + vec2(sp, 0.0)).r, samp(uv).g, samp(uv - vec2(sp, 0.0)).b);
-  c = saturate3(c, 0.55);
-  c = scurve(c, 0.35);
+  c += vec3(ringD(uv, 0.4));
+  c = dotCrawl(uv, c, 0.4*uBleed);
+  c = saturate3(c, 0.5);
+  c = scurve(c, 0.4);
   c = warmth(c, uWarm);
-  float weak = smoothstep(0.2, 1.0, sin(t*0.8)*0.5 + 0.5 + (vnoise(vec2(t*1.5, 4.0)) - 0.5)*0.6);
   float level = uGrain * (0.25 + 0.75*weak);
-  vec2 px = floor(uv * uRes / 2.0);
+  /* analog snow is smeared horizontally, not square */
+  vec2 px = floor(uv * uRes / vec2(3.0, 1.5));
   float snow = hash(px + fr*vec2(17.0, 31.0));
-  float streak = hash(vec2(floor(uv.y*uRes.y/2.0), fr));
-  float n = snow*0.8 + streak*0.2;
-  c = mix(c, vec3(n), clamp(level*0.75, 0.0, 1.0));
+  float streak = hash(vec2(floor(uv.y*uRes.y/1.5), fr));
+  float n = snow*0.75 + streak*0.25;
+  vec3 nc = vec3(n) + (vec3(hash(px + fr + 3.0), hash(px + fr + 7.0), hash(px + fr + 11.0)) - 0.5)*0.15;
+  c = mix(c, nc, clamp(level*0.75, 0.0, 1.0));
+  c *= 1.0 + 0.07*sin(uv.y*5.0 - t*1.2)*(0.3 + uGrain);
   float barY = fract(1.0 - t*0.15);
   float bar = smoothstep(0.10, 0.0, abs(uv.y - barY));
   c *= 1.0 + bar*0.3;
@@ -458,7 +672,7 @@ vec3 statictv(vec2 uv){
   return c;
 }
 
-/* ---------------- 4  Channel bleed ---------------- */
+/* ---------------- 5  Channel bleed ---------------- */
 vec3 chbleed(vec2 uv){
   float t = uTime;
   float fr = frameIdx(30.0);
@@ -471,31 +685,45 @@ vec3 chbleed(vec2 uv){
   float sp = 0.004*uBleed;
   vec3 A = vec3(samp(uvA + vec2(sp, 0.0)).r, samp(uvA).g, samp(uvA - vec2(sp, 0.0)).b);
 
-  vec2 uvB = (uv - 0.5)*1.35 + 0.5;
-  uvB.x = 1.0 - uvB.x + t*0.02;
-  uvB.y = uvB.y + t*0.03;
-  vec3 B = samp(uvB);
-  B = mix(vec3(luma(B)), B, 0.5) * vec3(1.05, 0.55, 1.15);
+  /* the other channel has its own sync, so it rolls and wobbles separately */
+  float ph2 = fract(t*0.07 + 0.3);
+  float roll2 = smoothstep(0.5, 1.0, ph2) * 0.6;
+  vec2 uvB = vec2(uv.x + sin(uv.y*9.0 - t*2.0)*0.012*uDistort + t*0.01, fract(uv.y + roll2 + t*0.02));
+  vec3 B;
+  if(uAltChan > 0.5){
+    B = testBars(uvB);
+  }else{
+    vec2 z = (uvB - 0.5)*1.4 + 0.5;
+    z.x = 1.0 - z.x;
+    B = sampS(z);
+  }
+  B = mix(vec3(luma(B)), B, 0.55) * vec3(1.05, 0.6, 1.15);
+  B = scurve(B, 0.4);
 
   float bands = sin(uv.y*5.0 + t*0.7 + sin(uv.y*14.0 - t*1.3)*1.4);
   float ragged = (vnoise(vec2(uv.y*60.0, floor(t*15.0))) - 0.5)*0.35;
   float m = smoothstep(-0.1, 0.6, bands*0.6 + 0.4*sin(t*0.5) + ragged);
   m *= smoothstep(0.0, 0.8, uv.x + 0.35*sin(t*0.3));
   vec3 c = mix(A, B, m * uBleed * 0.9);
-
   vec3 ghost = samp(uvA - vec2(0.045, 0.0));
   c = mix(c, ghost, 0.3*uBleed);
+  /* herringbone beat pattern from the interfering carrier */
+  float beat = uv.x*55.0 + uv.y*180.0 + t*9.0;
+  c += vec3(sin(beat), sin(beat + 2.1), sin(beat + 4.2)) * 0.02 * uBleed * (0.4 + m);
+  c += vec3(ringD(uv, 0.3));
+  c = dotCrawl(uv, c, 0.3*uBleed);
   c = saturate3(c, 0.9);
   c = warmth(c, uWarm);
   c += (hash(uv*uRes*0.5 + fr*3.1) - 0.5) * 0.2 * uGrain;
-  c += 0.03 * uBleed * sin(uv.y*420.0 + uv.x*60.0 + t*20.0);
+  /* brief static burst when the tuner picks up a new channel */
+  c = mix(c, vec3(hash(floor(uv*uRes/2.0) + fr*7.0)), uFlash*0.75);
   c = mix(c, vec3(0.02), seam);
   c *= scanl(uv, 280.0, uScan*0.6);
   c *= vignette(uv, uVig);
   return c;
 }
 
-/* ---------------- 5  35mm film ---------------- */
+/* ---------------- 6  35mm film ---------------- */
 vec3 film35(vec2 uv){
   float fr = frameIdx(24.0);
   vec2 weave = (vec2(hash(vec2(fr, 1.0)), hash(vec2(fr, 2.0))) - 0.5) * 0.0025 * uDistort
@@ -522,7 +750,7 @@ vec3 film35(vec2 uv){
   return c;
 }
 
-/* ---------------- 6  Super 8 ---------------- */
+/* ---------------- 7  Super 8 ---------------- */
 vec3 super8(vec2 uv){
   float fr = frameIdx(18.0);
   vec2 j = (vec2(hash(vec2(fr, 1.3)), hash(vec2(fr, 2.3))) - 0.5) * 0.008 * uDistort;
@@ -549,7 +777,7 @@ vec3 super8(vec2 uv){
   return c;
 }
 
-/* ---------------- 7  CRT monitor ---------------- */
+/* ---------------- 8  CRT monitor ---------------- */
 vec3 crt(vec2 uv){
   float t = uTime;
   vec2 q = uv*2.0 - 1.0;
@@ -561,7 +789,8 @@ vec3 crt(vec2 uv){
   vec2 dc = (w - 0.5) * 0.01 * uBleed;
   vec3 c = vec3(samp(pu + dc).r, samp(pu).g, samp(pu - dc).b);
   vec3 hb = (samp(pu + vec2(0.0018, 0.0)) + samp(pu - vec2(0.0018, 0.0))) * 0.5;
-  c = mix(c, hb, 0.3);
+  /* focus falls off toward the corners */
+  c = mix(c, hb, 0.3 + 0.4*smoothstep(0.3, 0.75, length(w - 0.5)));
   c += bloom(pu, 0.006, 0.55) * 1.3;
   float sl = 0.5 + 0.5*sin(w.y*rows*2.0*PI - PI*0.5);
   c *= 1.0 - uScan*0.6*(1.0 - sl);
@@ -575,11 +804,16 @@ vec3 crt(vec2 uv){
   c = saturate3(scurve(c, 0.3), 1.15);
   c = warmth(c, uWarm);
   c *= vignette(w, uVig);
-  float edge = smoothstep(0.0, 0.012, min(min(w.x, 1.0 - w.x), min(w.y, 1.0 - w.y)));
+  /* faint glass reflection */
+  c += vec3(0.05) * smoothstep(0.55, 0.0, length((w - vec2(0.24, 0.84))*vec2(1.0, 1.6)));
+  /* rounded tube corners */
+  vec2 dd = abs(w - 0.5) - (0.5 - 0.06);
+  float dist = length(max(dd, 0.0)) + min(max(dd.x, dd.y), 0.0) - 0.06;
+  float edge = smoothstep(0.006, -0.004, dist);
   return c*edge;
 }
 
-/* ---------------- 8  Security cam ---------------- */
+/* ---------------- 9  Security cam ---------------- */
 vec3 seccam(vec2 uv){
   float t = uTime;
   float fr = frameIdx(15.0);
@@ -612,7 +846,7 @@ vec3 seccam(vec2 uv){
   return col;
 }
 
-/* ---------------- 9  Silent film ---------------- */
+/* ---------------- 10  Silent film ---------------- */
 vec3 silent(vec2 uv){
   float fr = frameIdx(16.0);
   vec2 j = (vec2(hash(vec2(fr, 1.1)), hash(vec2(fr, 2.2))) - 0.5) * 0.01 * uDistort;
@@ -638,69 +872,79 @@ vec3 silent(vec2 uv){
 
 void main(){
   vec2 uv = vUv;
-  vec3 orig = samp(uv);
+  vec3 orig = sampRaw(uv);
   vec3 c;
   float L = uLook;
-  if(L < 0.5)      c = disposable(uv);
-  else if(L < 1.5) c = vhs(uv);
-  else if(L < 2.5) c = glitchtv(uv);
-  else if(L < 3.5) c = statictv(uv);
-  else if(L < 4.5) c = chbleed(uv);
-  else if(L < 5.5) c = film35(uv);
-  else if(L < 6.5) c = super8(uv);
-  else if(L < 7.5) c = crt(uv);
-  else if(L < 8.5) c = seccam(uv);
-  else             c = silent(uv);
+  if(L < 0.5)       c = disposable(uv);
+  else if(L < 1.5)  c = handycam(uv);
+  else if(L < 2.5)  c = vhs(uv);
+  else if(L < 3.5)  c = glitchtv(uv);
+  else if(L < 4.5)  c = statictv(uv);
+  else if(L < 5.5)  c = chbleed(uv);
+  else if(L < 6.5)  c = film35(uv);
+  else if(L < 7.5)  c = super8(uv);
+  else if(L < 8.5)  c = crt(uv);
+  else if(L < 9.5)  c = seccam(uv);
+  else              c = silent(uv);
   c = mix(orig, c, uIntensity);
+  if(uOsdChain < 0.5 && L > 1.5){ vec4 o = osdAt(uv); c = mix(c, o.rgb, o.a); }
   gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
 }
 `;
 
 /* =====================================================================
    LOOKS + SLIDERS
+   comb  = interlace combing strength (needs Motion trails above zero)
+   chain = on-screen display travels through the video chain (gets
+           smeared, torn and noised along with the picture)
    ===================================================================== */
 const LOOKS = [
-  { name:'Disposable', tag:'Cheap plastic lens, warm fade, light leaks and a date stamp.',
-    sw:'linear-gradient(135deg,#f7c58b,#e0783a 55%,#3a2a20)',
-    d:{intensity:100,speed:100,grain:50,distort:30,bleed:40,scan:35,vig:55,warm:40} },
-  { name:'VHS camcorder', tag:'Smeared color, tracking bands, head-switching noise, REC display.',
-    sw:'repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 2px,transparent 2px 4px),linear-gradient(90deg,#ff2d95,#3a2f7a 50%,#00e5ff)',
-    d:{intensity:100,speed:100,grain:45,distort:50,bleed:55,scan:50,vig:35,warm:-10} },
-  { name:'Glitch TV', tag:'Torn rows, RGB split and corrupted blocks in random bursts.',
-    sw:'linear-gradient(100deg,#ff0040 0 33%,#00ff9c 33% 66%,#2a5bff 66%)',
-    d:{intensity:100,speed:100,grain:35,distort:65,bleed:55,scan:40,vig:25,warm:0} },
-  { name:'Static TV', tag:'Weak signal: snow, rolling interference bar and hold wobble.',
-    sw:'repeating-conic-gradient(#8a8a8a 0 25%,#232323 0 50%) 0 0/5px 5px',
-    d:{intensity:100,speed:100,grain:60,distort:45,bleed:40,scan:50,vig:45,warm:-15} },
-  { name:'Channel bleed', tag:'Another channel bleeds through, with vertical roll and ghosting.',
-    sw:'linear-gradient(180deg,#5b6cff 0 42%,#ff5fd2 42% 62%,#59d6d6 62%)',
-    d:{intensity:100,speed:100,grain:30,distort:55,bleed:65,scan:45,vig:35,warm:0} },
+  { name:'Disposable', tag:'Cheap plastic lens, warm fade, light leaks and an exposed-in date stamp.',
+    sw:'linear-gradient(135deg,#f7c58b,#e0783a 55%,#3a2a20)', hasUnits:false, comb:0, chain:false,
+    d:{intensity:100,speed:100,trails:0,grain:50,distort:30,bleed:40,scan:35,vig:55,warm:40,stamp:true,units:false} },
+  { name:'2000s handycam', tag:'MiniDV camcorder: handheld shake, focus hunting, CCD smear, purple fringing, interlacing and the on-screen display.',
+    sw:'linear-gradient(135deg,#dfe6ee,#5b7aa6 55%,#1d2733)', hasUnits:true, comb:0.8, chain:false,
+    d:{intensity:100,speed:100,trails:30,grain:45,distort:40,bleed:45,scan:40,vig:35,warm:-5,stamp:true,units:true} },
+  { name:'VHS camcorder', tag:'Tape smear, head skew, dropouts, dot crawl and chroma noise. The display gets smeared too.',
+    sw:'repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 2px,transparent 2px 4px),linear-gradient(90deg,#ff2d95,#3a2f7a 50%,#00e5ff)', hasUnits:true, comb:0.5, chain:true,
+    d:{intensity:100,speed:100,trails:45,grain:45,distort:50,bleed:55,scan:50,vig:35,warm:-10,stamp:true,units:true} },
+  { name:'Glitch TV', tag:'Torn rows, stretched pixels, RGB split and corrupted blocks in random bursts.',
+    sw:'linear-gradient(100deg,#ff0040 0 33%,#00ff9c 33% 66%,#2a5bff 66%)', hasUnits:true, comb:0.3, chain:true,
+    d:{intensity:100,speed:100,trails:30,grain:35,distort:65,bleed:55,scan:40,vig:25,warm:0,stamp:false,units:true} },
+  { name:'Static TV', tag:'Weak signal: smeared snow, hum bars, rolling interference and hold wobble.',
+    sw:'repeating-conic-gradient(#8a8a8a 0 25%,#232323 0 50%) 0 0/5px 5px', hasUnits:true, comb:0.4, chain:false,
+    d:{intensity:100,speed:100,trails:35,grain:60,distort:45,bleed:40,scan:50,vig:45,warm:-15,stamp:false,units:true} },
+  { name:'Channel bleed', tag:'A second channel bleeds through with its own sync. Every few seconds the tuner jumps: an older frame of you, or a test card.',
+    sw:'linear-gradient(180deg,#5b6cff 0 42%,#ff5fd2 42% 62%,#59d6d6 62%)', hasUnits:true, comb:0.4, chain:false,
+    d:{intensity:100,speed:100,trails:45,grain:30,distort:55,bleed:65,scan:45,vig:35,warm:0,stamp:false,units:true} },
   { name:'35mm film', tag:'Soft grain, red halation around highlights, faded teal and orange.',
-    sw:'linear-gradient(135deg,#2d4b57,#c9a37a)',
-    d:{intensity:100,speed:100,grain:45,distort:25,bleed:40,scan:25,vig:40,warm:15} },
+    sw:'linear-gradient(135deg,#2d4b57,#c9a37a)', hasUnits:false, comb:0, chain:false,
+    d:{intensity:100,speed:100,trails:0,grain:45,distort:25,bleed:40,scan:25,vig:40,warm:15,stamp:false,units:false} },
   { name:'Super 8', tag:'Warm home-movie color, gate weave, flicker and film-edge leaks.',
-    sw:'linear-gradient(135deg,#b5451b,#f2b34c 60%,#5a2f14)',
-    d:{intensity:100,speed:100,grain:60,distort:45,bleed:35,scan:45,vig:60,warm:45} },
-  { name:'CRT monitor', tag:'Curved glass, phosphor mask, scanlines and glow.',
-    sw:'radial-gradient(circle,#6dffa0 0,#0b5a2a 65%,#03110a)',
-    d:{intensity:100,speed:100,grain:25,distort:40,bleed:45,scan:65,vig:45,warm:0} },
+    sw:'linear-gradient(135deg,#b5451b,#f2b34c 60%,#5a2f14)', hasUnits:false, comb:0, chain:false,
+    d:{intensity:100,speed:100,trails:0,grain:60,distort:45,bleed:35,scan:45,vig:60,warm:45,stamp:false,units:false} },
+  { name:'CRT monitor', tag:'Curved glass, phosphor glow and lag, scanlines and a green input display.',
+    sw:'radial-gradient(circle,#6dffa0 0,#0b5a2a 65%,#03110a)', hasUnits:true, comb:0.4, chain:false,
+    d:{intensity:100,speed:100,trails:45,grain:25,distort:40,bleed:45,scan:65,vig:45,warm:0,stamp:false,units:true} },
   { name:'Security cam', tag:'Low-res wide lens, night-vision tint and timestamp. Warmth changes the tint.',
-    sw:'repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 2px,transparent 2px 4px),linear-gradient(#1ecb6a,#04321a)',
-    d:{intensity:100,speed:100,grain:45,distort:35,bleed:25,scan:55,vig:40,warm:-80} },
+    sw:'repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 2px,transparent 2px 4px),linear-gradient(#1ecb6a,#04321a)', hasUnits:true, comb:0.5, chain:true,
+    d:{intensity:100,speed:100,trails:30,grain:45,distort:35,bleed:25,scan:55,vig:40,warm:-80,stamp:true,units:true} },
   { name:'Silent film', tag:'Flickering black and white with scratches, dust and jerky frames.',
-    sw:'linear-gradient(135deg,#f1e6d0,#6d6355 60%,#1e1b17)',
-    d:{intensity:100,speed:100,grain:55,distort:55,bleed:30,scan:65,vig:60,warm:55} },
+    sw:'linear-gradient(135deg,#f1e6d0,#6d6355 60%,#1e1b17)', hasUnits:false, comb:0, chain:false,
+    d:{intensity:100,speed:100,trails:10,grain:55,distort:55,bleed:30,scan:65,vig:60,warm:55,stamp:false,units:false} },
 ];
+const ID = { DISP:0, HANDY:1, VHS:2, GLITCH:3, STATIC:4, CHBLEED:5, FILM:6, S8:7, CRT:8, SEC:9, SILENT:10 };
 
 const SLIDERS = [
-  { k:'intensity', label:'Intensity',     min:0, max:100 },
-  { k:'speed',     label:'Speed',         min:0, max:300, unit:'%' },
+  { k:'intensity', label:'Intensity',       min:0, max:100 },
+  { k:'speed',     label:'Speed',           min:0, max:300, unit:'%' },
+  { k:'trails',    label:'Motion trails',   min:0, max:100 },
   { k:'grain',     label:'Grain and noise', min:0, max:100 },
-  { k:'distort',   label:'Distortion',    min:0, max:100 },
-  { k:'bleed',     label:'Color bleed',   min:0, max:100 },
-  { k:'scan',      label:'Lines and dust', min:0, max:100 },
-  { k:'vig',       label:'Vignette',      min:0, max:100 },
-  { k:'warm',      label:'Warmth',        min:-100, max:100 },
+  { k:'distort',   label:'Distortion',      min:0, max:100 },
+  { k:'bleed',     label:'Color bleed',     min:0, max:100 },
+  { k:'scan',      label:'Lines and dust',  min:0, max:100 },
+  { k:'vig',       label:'Vignette',        min:0, max:100 },
+  { k:'warm',      label:'Warmth',          min:-100, max:100 },
 ];
 
 /* =====================================================================
@@ -709,19 +953,21 @@ const SLIDERS = [
 const $ = s => document.querySelector(s);
 const app = $('#app'), video = $('#cam'), out = $('#out');
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
-const KEY = 'retrocam.v1';
+const KEY = 'retrocam.v2';
+const p2 = n => String(n).padStart(2, '0');
 
 const state = {
   look: 0,
   tweaks: LOOKS.map(l => Object.assign({}, l.d)),
-  overlay: true,
   audio: true,
   quality: 1280,
   mode: 'photo',
   recording: false,
-  source: null,          // 'camera' | 'demo'
+  source: null,
   facing: isMobile ? 'environment' : 'user',
   mirror: false,
+  dateOffset: 0,   // ms added to the real clock for the date/time stamp
+  tapeSec: 0,      // handycam tape counter
 };
 const V = () => state.tweaks[state.look];
 
@@ -731,13 +977,12 @@ function loadPrefs(){
     if(!s) return;
     if(Number.isInteger(s.look) && s.look >= 0 && s.look < LOOKS.length) state.look = s.look;
     if(s.tweaks) state.tweaks = LOOKS.map((l, i) => Object.assign({}, l.d, s.tweaks[i] || {}));
-    if(typeof s.overlay === 'boolean') state.overlay = s.overlay;
     if(typeof s.audio === 'boolean') state.audio = s.audio;
     if([960,1280,1920].includes(s.quality)) state.quality = s.quality;
   }catch(e){}
 }
 function savePrefs(){
-  try{ localStorage.setItem(KEY, JSON.stringify({look:state.look, tweaks:state.tweaks, overlay:state.overlay, audio:state.audio, quality:state.quality})); }catch(e){}
+  try{ localStorage.setItem(KEY, JSON.stringify({look:state.look, tweaks:state.tweaks, audio:state.audio, quality:state.quality})); }catch(e){}
 }
 
 function fatal(msg){
@@ -755,7 +1000,7 @@ function toast(msg, ms = 2600){
 }
 
 /* =====================================================================
-   WEBGL
+   WEBGL SETUP
    ===================================================================== */
 const octx = out.getContext('2d', { alpha:false });
 const glc = document.createElement('canvas');
@@ -764,6 +1009,10 @@ const gl = glc.getContext('webgl', { alpha:false, antialias:false, premultiplied
         || glc.getContext('experimental-webgl');
 if(!gl){ fatal('WebGL is not available in this browser, so the filters cannot run.'); return; }
 
+const osdCanvas = document.createElement('canvas');
+osdCanvas.width = glc.width; osdCanvas.height = glc.height;
+const osdCtx = osdCanvas.getContext('2d');
+
 function compile(type, src){
   const s = gl.createShader(type);
   gl.shaderSource(s, src);
@@ -771,36 +1020,73 @@ function compile(type, src){
   if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
   return s;
 }
-let prog;
+function makeProgram(vs, fs){
+  const p = gl.createProgram();
+  gl.attachShader(p, compile(gl.VERTEX_SHADER, vs));
+  gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+  gl.bindAttribLocation(p, 0, 'aPos');
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  return p;
+}
+function locs(p, names){ const o = {}; names.forEach(n => o[n] = gl.getUniformLocation(p, n)); return o; }
+
+let progMain, progAcc;
 try{
-  prog = gl.createProgram();
-  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
-  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
-  gl.linkProgram(prog);
-  if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  progAcc = makeProgram(VS, ACC);
+  progMain = makeProgram(VS, FS);
 }catch(e){ fatal('Shader compile error:\n\n' + e.message); return; }
-gl.useProgram(prog);
+
+const A = locs(progAcc, ['uCur','uPrev','uP','uPC','uReset']);
+const M = locs(progMain, ['uRaw','uTex','uSnap','uOsd','uRes','uTime','uLook','uIntensity','uGrain','uDistort','uBleed','uScan','uVig','uWarm','uMirror','uComb','uField','uOsdOn','uOsdChain','uFlash','uAltChan']);
 
 const buf = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buf);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
-const aPos = gl.getAttribLocation(prog, 'aPos');
-gl.enableVertexAttribArray(aPos);
-gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-const tex = gl.createTexture();
-gl.activeTexture(gl.TEXTURE0);
-gl.bindTexture(gl.TEXTURE_2D, tex);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-const U = {};
-['uTex','uRes','uTime','uLook','uIntensity','uGrain','uDistort','uBleed','uScan','uVig','uWarm','uMirror']
-  .forEach(n => U[n] = gl.getUniformLocation(prog, n));
-gl.uniform1i(U.uTex, 0);
+gl.useProgram(progAcc);
+gl.uniform1i(A.uCur, 0); gl.uniform1i(A.uPrev, 1);
+gl.useProgram(progMain);
+gl.uniform1i(M.uRaw, 0); gl.uniform1i(M.uTex, 1); gl.uniform1i(M.uSnap, 2); gl.uniform1i(M.uOsd, 3);
+
+function mkTex(w, h){
+  const t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  if(w) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  return t;
+}
+function mkFbo(tx){
+  const f = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tx, 0);
+  return f;
+}
+
+gl.activeTexture(gl.TEXTURE0); const rawTex = mkTex();
+gl.activeTexture(gl.TEXTURE3); const osdTex = mkTex();
+let histTex = [null, null], histFbo = [null, null], snapTex = null, snapFbo = null;
+let hi = 0, targW = 0, targH = 0, needReset = true, snapDirty = true, lastSnap = 0, snapCount = 0, altChan = 0;
+let osdSig = '', osdVer = 0;
+
+function allocTargets(w, h){
+  [histTex[0], histTex[1], snapTex].forEach(t => t && gl.deleteTexture(t));
+  [histFbo[0], histFbo[1], snapFbo].forEach(f => f && gl.deleteFramebuffer(f));
+  gl.activeTexture(gl.TEXTURE1);
+  histTex = [mkTex(w, h), mkTex(w, h)];
+  snapTex = mkTex(w, h);
+  histFbo = histTex.map(mkFbo);
+  snapFbo = mkFbo(snapTex);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  targW = w; targH = h;
+  needReset = true; snapDirty = true; osdSig = '';
+}
 
 /* =====================================================================
    DEMO SOURCE (used when no camera is available)
@@ -833,29 +1119,186 @@ function drawDemo(t){
 }
 
 /* =====================================================================
+   ON-SCREEN DISPLAY (drawn to a transparent canvas, then sampled by
+   the shader so it can travel through the video chain)
+   ===================================================================== */
+const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const clockNow = () => new Date(Date.now() + state.dateOffset);
+
+function drawOsd(w, h, nowMs){
+  const c = osdCtx, id = state.look, v = V(), LU = LOOKS[id];
+  c.clearRect(0, 0, w, h);
+  const u = Math.min(w, h)/720, m = 40*u;
+  const d = clockNow();
+  const blink = Math.floor(nowMs/500) % 2 === 0;
+  const showU = v.units && LU.hasUnits, showS = v.stamp;
+  const yy = d.getFullYear(), mo = d.getMonth(), da = d.getDate();
+  const h24 = d.getHours(), h12 = h24 % 12 || 12, ap = h24 < 12 ? 'AM' : 'PM';
+  const mi = p2(d.getMinutes()), se = p2(d.getSeconds());
+  c.save();
+  c.textBaseline = 'alphabetic';
+
+  const vt = (s, x, y, color, size, al, glow) => {
+    c.font = `${Math.round(size*u)}px VT323, "Courier New", monospace`;
+    c.textAlign = al || 'left';
+    c.shadowColor = glow || 'rgba(0,0,0,.7)'; c.shadowBlur = (glow ? 9 : 4)*u;
+    c.fillStyle = color; c.fillText(s, x, y);
+  };
+  const sans = (s, x, y, color, size, al) => {
+    c.font = `600 ${Math.round(size*u)}px "Chakra Petch", "Trebuchet MS", Arial, sans-serif`;
+    c.textAlign = al || 'left';
+    c.shadowBlur = 0;
+    c.lineWidth = 5*u; c.lineJoin = 'round'; c.strokeStyle = 'rgba(0,0,0,.85)';
+    c.strokeText(s, x, y);
+    c.fillStyle = color || '#fff'; c.fillText(s, x, y);
+  };
+  const dot = (x, y, r, color) => { c.shadowBlur = 8*u; c.shadowColor = color; c.fillStyle = color; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); };
+  const genericStamp = () => vt(`${p2(mo+1)}.${p2(da)}.${yy}  ${p2(h24)}:${mi}`, w - m, h - m, '#ffb43a', 44, 'right', 'rgba(255,150,0,.8)');
+  const camStamp = () => {
+    vt(`${MON[mo]}. ${p2(da)} ${yy}`, m, h - m - 36*u, '#ffffff', 40);
+    vt(`${h12}:${mi} ${ap}`, m, h - m, '#ffffff', 40);
+  };
+
+  if(id === ID.DISP){
+    if(showS) vt(`'${p2(yy % 100)}  ${mo+1}  ${p2(da)}`, w - m, h - m, '#ff8a1f', 44, 'right', 'rgba(255,110,0,.9)');
+  }
+  else if(id === ID.HANDY){
+    if(showU){
+      if(state.recording){
+        if(blink) dot(m + 12*u, m + 16*u, 10*u, '#ff3b2f');
+        sans('REC', m + 32*u, m + 30*u, '#ffffff', 42);
+      }else sans('STBY', m, m + 30*u, '#ffffff', 42);
+      const tc = Math.floor(state.tapeSec);
+      sans(`${Math.floor(tc/3600)}:${p2(Math.floor(tc/60) % 60)}:${p2(tc % 60)}`, w/2, m + 30*u, '#ffffff', 38, 'center');
+      sans('SP', m, m + 72*u, '#ffffff', 30);
+      sans('60min', m + 56*u, m + 72*u, '#ffffff', 30);
+      // battery
+      const bx = w - m - 64*u, by = m + 6*u, bw = 54*u, bh = 26*u;
+      c.shadowColor = 'rgba(0,0,0,.85)'; c.shadowBlur = 3*u;
+      c.lineWidth = 4*u; c.strokeStyle = '#fff'; c.strokeRect(bx, by, bw, bh);
+      c.fillStyle = '#fff'; c.fillRect(bx + bw, by + 8*u, 5*u, 10*u);
+      for(let i = 0; i < 3; i++) c.fillRect(bx + 5*u + i*15.5*u, by + 5*u, 12*u, bh - 10*u);
+      sans('0:52', w - m, m + 72*u, '#ffffff', 30, 'right');
+      // zoom bar
+      const zy = h - m - 6*u;
+      sans('W', m, zy + 5*u, '#ffffff', 30);
+      c.shadowBlur = 0; c.lineWidth = 3*u; c.strokeStyle = '#fff'; c.strokeRect(m + 34*u, zy - 8*u, 150*u, 12*u);
+      c.fillStyle = '#fff'; c.fillRect(m + 37*u, zy - 5*u, 18*u, 6*u);
+      sans('T', m + 196*u, zy + 5*u, '#ffffff', 30);
+    }
+    if(showS){
+      sans(`${MON[mo]} ${da} ${yy}`, w - m, h - m - 40*u, '#ffffff', 40, 'right');
+      sans(`${h12}:${mi}:${se} ${ap}`, w - m, h - m, '#ffffff', 40, 'right');
+    }
+  }
+  else if(id === ID.VHS){
+    if(showU){
+      if(blink) dot(m + 10*u, m + 6*u, 9*u, '#ff3b2f');
+      vt('REC', m + 30*u, m + 20*u, '#ffffff', 44);
+      c.shadowBlur = 3*u; c.shadowColor = 'rgba(0,0,0,.7)';
+      c.strokeStyle = '#fff'; c.lineWidth = 2.5*u;
+      c.strokeRect(w - m - 54*u, m - 10*u, 46*u, 22*u);
+      c.fillStyle = '#fff'; c.fillRect(w - m - 8*u, m - 4*u, 4*u, 10*u);
+      for(let i = 0; i < 3; i++) c.fillRect(w - m - 50*u + i*14*u, m - 6*u, 11*u, 14*u);
+      vt('SP', w - m - 66*u, m + 14*u, '#ffffff', 40, 'right');
+    }
+    if(showS) camStamp();
+  }
+  else if(id === ID.GLITCH){
+    if(showU){
+      c.shadowBlur = 6*u; c.shadowColor = 'rgba(0,0,0,.7)'; c.fillStyle = '#fff';
+      c.beginPath(); c.moveTo(m, m - 22*u); c.lineTo(m + 20*u, m - 8*u); c.lineTo(m, m + 6*u); c.closePath(); c.fill();
+      vt('PLAY', m + 30*u, m + 10*u, '#ffffff', 44);
+    }
+    if(showS) camStamp();
+  }
+  else if(id === ID.STATIC){
+    if(showU) vt('CH 03', w - m, m + 24*u, '#5dff7a', 68, 'right', 'rgba(60,255,110,.9)');
+    if(showS) genericStamp();
+  }
+  else if(id === ID.CHBLEED){
+    if(showU){
+      const ch = (Math.floor(nowMs/5000) % 3 === 0) ? '04' : '03';
+      vt('CH ' + ch, w - m, m + 24*u, '#5dff7a', 68, 'right', 'rgba(60,255,110,.9)');
+    }
+    if(showS) genericStamp();
+  }
+  else if(id === ID.CRT){
+    if(showU){
+      vt('VIDEO 1', m, m + 24*u, '#5dff7a', 60, 'left', 'rgba(60,255,110,.9)');
+      vt('VOL', m, h - m, '#5dff7a', 52, 'left', 'rgba(60,255,110,.9)');
+      c.shadowColor = 'rgba(60,255,110,.9)'; c.shadowBlur = 8*u;
+      for(let i = 0; i < 12; i++){
+        c.fillStyle = i < 7 ? '#5dff7a' : 'rgba(93,255,122,.22)';
+        c.fillRect(m + 80*u + i*16*u, h - m - 30*u, 11*u, 30*u);
+      }
+    }
+    if(showS) genericStamp();
+  }
+  else if(id === ID.SEC){
+    if(showU){
+      vt('CAM 01', m, m + 16*u, '#e8ffe8', 44);
+      if(blink) dot(m + 10*u, h - m - 8*u, 9*u, '#ff3b2f');
+      vt('REC', m + 28*u, h - m, '#e8ffe8', 40);
+    }
+    if(showS){
+      vt(`${yy}-${p2(mo+1)}-${p2(da)}`, w - m, m + 16*u, '#e8ffe8', 40, 'right');
+      vt(`${p2(h24)}:${mi}:${se}`, w - m, m + 50*u, '#e8ffe8', 40, 'right');
+    }
+  }
+  else{
+    if(showS) genericStamp();
+  }
+  c.restore();
+}
+
+/* redraws the display only when something in it changes */
+function updateOsd(w, h, nowMs){
+  const v = V(), LU = LOOKS[state.look];
+  const has = v.stamp || (v.units && LU.hasUnits);
+  if(!has) return false;
+  const secs = Math.floor((Date.now() + state.dateOffset)/1000);
+  const sig = [state.look, v.stamp, v.units, state.recording, Math.floor(nowMs/500) % 2, secs, Math.floor(state.tapeSec), w, h, osdVer, Math.floor(nowMs/5000) % 3].join('|');
+  if(sig !== osdSig){
+    osdSig = sig;
+    drawOsd(w, h, nowMs);
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, osdTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, osdCanvas);
+  }
+  return true;
+}
+
+/* =====================================================================
    RENDER LOOP
    ===================================================================== */
-let running = false, tAcc = 0, lastT = 0;
+let running = false, tAcc = 0, lastT = 0, frameCount = 0;
 
 function fitCanvas(sw, sh){
   if(state.recording) return;
   const scale = Math.min(1, state.quality / Math.max(sw, sh));
   const w = Math.max(2, Math.round(sw*scale/2)*2);
   const h = Math.max(2, Math.round(sh*scale/2)*2);
-  if(out.width !== w || out.height !== h){
+  if(out.width !== w || out.height !== h || targW !== w || targH !== h){
     out.width = w; out.height = h;
     glc.width = w; glc.height = h;
+    osdCanvas.width = w; osdCanvas.height = h;
     gl.viewport(0, 0, w, h);
+    allocTargets(w, h);
   }
 }
+
+function drawQuad(){ gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); }
 
 function loop(now){
   requestAnimationFrame(loop);
   if(!running || now - lastT < 30) return;
   const dt = Math.min((now - lastT)/1000, 0.1);
   lastT = now;
-  const v = V();
+  const v = V(), LU = LOOKS[state.look];
   tAcc = (tAcc + dt * v.speed/100) % 3600;
+  if(state.recording) state.tapeSec += dt;
+  frameCount++;
 
   let src, sw, sh;
   if(state.source === 'demo'){ drawDemo(now/1000); src = demo; sw = 1280; sh = 720; }
@@ -864,90 +1307,65 @@ function loop(now){
     src = video; sw = video.videoWidth; sh = video.videoHeight;
   }
   fitCanvas(sw, sh);
+  if(!histFbo[0]) return;
+  const W = targW, H = targH;
+  gl.viewport(0, 0, W, H);
 
+  /* upload the newest camera frame */
   try{
-    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, rawTex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
   }catch(e){ return; }
 
-  gl.uniform2f(U.uRes, glc.width, glc.height);
-  gl.uniform1f(U.uTime, tAcc);
-  gl.uniform1f(U.uLook, state.look);
-  gl.uniform1f(U.uIntensity, v.intensity/100);
-  gl.uniform1f(U.uGrain, v.grain/100);
-  gl.uniform1f(U.uDistort, v.distort/100);
-  gl.uniform1f(U.uBleed, v.bleed/100);
-  gl.uniform1f(U.uScan, v.scan/100);
-  gl.uniform1f(U.uVig, v.vig/100);
-  gl.uniform1f(U.uWarm, v.warm/100);
-  gl.uniform1f(U.uMirror, state.mirror ? 1 : 0);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  /* pass 1: blend into the history texture (luma and chroma decay at different rates) */
+  const tr = v.trails/100;
+  const pl = Math.min(0.9, tr*0.9), pc = Math.min(0.96, pl + 0.10*tr);
+  gl.useProgram(progAcc);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, histTex[hi]);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, histFbo[1 - hi]);
+  gl.uniform1f(A.uP, pl); gl.uniform1f(A.uPC, pc); gl.uniform1f(A.uReset, needReset ? 1 : 0);
+  drawQuad();
+  hi = 1 - hi; needReset = false;
+
+  /* channel bleed: freeze a frame now and then to serve as the "other channel" */
+  if(state.look === ID.CHBLEED && (snapDirty || now - lastSnap > 5000)){
+    gl.bindFramebuffer(gl.FRAMEBUFFER, snapFbo);
+    gl.uniform1f(A.uP, 0); gl.uniform1f(A.uPC, 0); gl.uniform1f(A.uReset, 1);
+    drawQuad();
+    lastSnap = now; snapDirty = false; altChan = (snapCount++ % 3 === 2) ? 1 : 0;
+  }
+
+  /* pass 2: the look */
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.useProgram(progMain);
+  const osdOn = updateOsd(W, H, now);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, rawTex);
+  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, histTex[hi]);
+  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, snapTex);
+  gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, osdTex);
+
+  gl.uniform2f(M.uRes, W, H);
+  gl.uniform1f(M.uTime, tAcc);
+  gl.uniform1f(M.uLook, state.look);
+  gl.uniform1f(M.uIntensity, v.intensity/100);
+  gl.uniform1f(M.uGrain, v.grain/100);
+  gl.uniform1f(M.uDistort, v.distort/100);
+  gl.uniform1f(M.uBleed, v.bleed/100);
+  gl.uniform1f(M.uScan, v.scan/100);
+  gl.uniform1f(M.uVig, v.vig/100);
+  gl.uniform1f(M.uWarm, v.warm/100);
+  gl.uniform1f(M.uMirror, state.mirror ? 1 : 0);
+  gl.uniform1f(M.uComb, tr > 0.02 ? LU.comb : 0);
+  gl.uniform1f(M.uField, frameCount % 2);
+  gl.uniform1f(M.uOsdOn, osdOn ? 1 : 0);
+  gl.uniform1f(M.uOsdChain, LU.chain ? 1 : 0);
+  gl.uniform1f(M.uFlash, state.look === ID.CHBLEED ? Math.max(0, 1 - (now - lastSnap)/450) : 0);
+  gl.uniform1f(M.uAltChan, altChan);
+  drawQuad();
 
   octx.drawImage(glc, 0, 0, out.width, out.height);
-  drawOverlay(out.width, out.height, now);
-}
-
-/* =====================================================================
-   ON-SCREEN TEXT (baked into photos and videos)
-   ===================================================================== */
-const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-const p2 = n => String(n).padStart(2, '0');
-
-function drawOverlay(w, h, nowMs){
-  if(!state.overlay) return;
-  const id = state.look;
-  if(![0,1,2,3,4,8].includes(id)) return;
-  const c = octx, u = Math.min(w, h)/720, d = new Date();
-  const blink = Math.floor(nowMs/500) % 2 === 0;
-  const jit = (Math.random() - .5) * 2 * u * (V().distort/100) * (id === 1 || id === 2 ? 1 : 0);
-  const F = px => `${Math.round(px*u)}px VT323, "Courier New", monospace`;
-  const txt = (s, x, y, color, size, align, glow) => {
-    c.font = F(size); c.textAlign = align || 'left';
-    c.shadowColor = glow || 'rgba(0,0,0,.7)'; c.shadowBlur = (glow ? 9 : 4)*u;
-    c.fillStyle = color; c.fillText(s, x, y);
-  };
-  const dot = (x, y, r, color) => { c.shadowBlur = 8*u; c.shadowColor = color; c.fillStyle = color; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); };
-  c.save();
-  const m = 40*u;
-
-  if(id === 0){
-    const s = `'${p2(d.getFullYear() % 100)}  ${d.getMonth()+1}  ${p2(d.getDate())}`;
-    txt(s, w - m, h - m, '#ff8a1f', 44, 'right', 'rgba(255,110,0,.9)');
-  }
-  else if(id === 1){
-    if(blink) dot(m + 10*u + jit, m + 6*u, 9*u, '#ff3b2f');
-    txt('REC', m + 30*u + jit, m + 20*u, '#ffffff', 44);
-    // battery
-    c.shadowBlur = 3*u; c.shadowColor = 'rgba(0,0,0,.7)';
-    c.strokeStyle = '#fff'; c.lineWidth = 2.5*u;
-    c.strokeRect(w - m - 54*u + jit, m - 10*u, 46*u, 22*u);
-    c.fillStyle = '#fff'; c.fillRect(w - m - 8*u + jit, m - 4*u, 4*u, 10*u);
-    for(let i = 0; i < 3; i++) c.fillRect(w - m - 50*u + i*14*u + jit, m - 6*u, 11*u, 14*u);
-    txt('SP', w - m - 66*u + jit, m + 14*u, '#ffffff', 40, 'right');
-    const h12 = d.getHours() % 12 || 12;
-    txt(`${MON[d.getMonth()]}. ${p2(d.getDate())} ${d.getFullYear()}`, m + jit, h - m - 36*u, '#ffffff', 40);
-    txt(`${h12}:${p2(d.getMinutes())} ${d.getHours() < 12 ? 'AM' : 'PM'}`, m + jit, h - m, '#ffffff', 40);
-  }
-  else if(id === 2){
-    c.shadowBlur = 6*u; c.shadowColor = 'rgba(0,0,0,.7)'; c.fillStyle = '#fff';
-    c.beginPath(); c.moveTo(m + jit, m - 22*u); c.lineTo(m + 20*u + jit, m - 8*u); c.lineTo(m + jit, m + 6*u); c.closePath(); c.fill();
-    txt('PLAY', m + 30*u + jit, m + 10*u, '#ffffff', 44);
-  }
-  else if(id === 3){
-    txt('CH 03', w - m, m + 24*u, '#5dff7a', 68, 'right', 'rgba(60,255,110,.9)');
-  }
-  else if(id === 4){
-    const ch = (Math.floor(nowMs/3000) % 3 === 2) ? '04' : '03';
-    txt('CH ' + ch, w - m, m + 24*u, '#5dff7a', 68, 'right', 'rgba(60,255,110,.9)');
-  }
-  else if(id === 8){
-    txt('CAM 01', m, m + 16*u, '#e8ffe8', 44);
-    if(blink) dot(m + 10*u, h - m - 8*u, 9*u, '#ff3b2f');
-    txt('REC', m + 28*u, h - m, '#e8ffe8', 40);
-    txt(`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`, w - m, m + 16*u, '#e8ffe8', 40, 'right');
-    txt(`${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`, w - m, m + 50*u, '#e8ffe8', 40, 'right');
-  }
-  c.restore();
 }
 
 /* =====================================================================
@@ -1024,6 +1442,25 @@ function refreshSliders(){
     setFill(e.inp);
   });
 }
+
+const togStamp = $('#togStamp'), togUnits = $('#togUnits'), togAudio = $('#togAudio');
+function syncToggles(){
+  const v = V(), LU = LOOKS[state.look];
+  togStamp.setAttribute('aria-pressed', !!v.stamp);
+  togUnits.hidden = !LU.hasUnits;
+  togUnits.setAttribute('aria-pressed', !!v.units);
+  togAudio.setAttribute('aria-pressed', state.audio);
+  [...$('#qSeg').children].forEach(b => b.setAttribute('aria-pressed', +b.dataset.q === state.quality));
+}
+togStamp.addEventListener('click', () => { V().stamp = !V().stamp; syncToggles(); savePrefs(); });
+togUnits.addEventListener('click', () => { V().units = !V().units; syncToggles(); savePrefs(); });
+togAudio.addEventListener('click', () => { state.audio = !state.audio; syncToggles(); savePrefs(); });
+$('#qSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  state.quality = +b.dataset.q; syncToggles(); savePrefs();
+  if(state.recording) toast('Quality changes apply after recording');
+});
+
 function selectLook(i){
   state.look = i;
   [...looksEl.children].forEach((b, j) => b.setAttribute('aria-pressed', j === i ? 'true' : 'false'));
@@ -1031,11 +1468,14 @@ function selectLook(i){
   $('#pName').textContent = LOOKS[i].name;
   $('#pTag').textContent = LOOKS[i].tag;
   refreshSliders();
+  syncToggles();
+  if(i === ID.CHBLEED) snapDirty = true;
+  osdSig = '';
   savePrefs();
 }
 $('#resetBtn').addEventListener('click', () => {
   state.tweaks[state.look] = Object.assign({}, LOOKS[state.look].d);
-  refreshSliders(); savePrefs();
+  refreshSliders(); syncToggles(); osdSig = ''; savePrefs();
 });
 
 function setPanel(open){
@@ -1045,19 +1485,15 @@ function setPanel(open){
 }
 $('#adjustBtn').addEventListener('click', () => setPanel(!panel.classList.contains('open')));
 
-const togOverlay = $('#togOverlay'), togAudio = $('#togAudio');
-function syncToggles(){
-  togOverlay.setAttribute('aria-pressed', state.overlay);
-  togAudio.setAttribute('aria-pressed', state.audio);
-  [...$('#qSeg').children].forEach(b => b.setAttribute('aria-pressed', +b.dataset.q === state.quality));
-}
-togOverlay.addEventListener('click', () => { state.overlay = !state.overlay; syncToggles(); savePrefs(); });
-togAudio.addEventListener('click', () => { state.audio = !state.audio; syncToggles(); savePrefs(); });
-$('#qSeg').addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
-  state.quality = +b.dataset.q; syncToggles(); savePrefs();
-  if(state.recording) toast('Quality changes apply after recording');
+/* stamp date */
+const dtIn = $('#dtIn');
+const toLocalInput = d => `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}T${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
+dtIn.value = toLocalInput(new Date());
+dtIn.addEventListener('change', () => {
+  const t = new Date(dtIn.value).getTime();
+  if(!isNaN(t)){ state.dateOffset = t - Date.now(); osdSig = ''; }
 });
+$('#dtNow').addEventListener('click', () => { state.dateOffset = 0; dtIn.value = toLocalInput(new Date()); osdSig = ''; });
 
 const shutter = $('#shutter');
 function setMode(m){
@@ -1158,6 +1594,7 @@ async function startRecording(){
   };
   recorder.start(250);
   state.recording = true;
+  osdSig = '';
   shutter.classList.add('recording');
   shutter.setAttribute('aria-label', 'Stop recording');
   $('#recBadge').classList.remove('hidden');
@@ -1171,6 +1608,7 @@ async function startRecording(){
 function stopRecording(){
   if(recorder && recorder.state !== 'inactive') recorder.stop();
   state.recording = false;
+  osdSig = '';
   shutter.classList.remove('recording');
   shutter.setAttribute('aria-label', 'Start recording');
   $('#recBadge').classList.add('hidden');
@@ -1232,11 +1670,13 @@ document.addEventListener('keydown', e => {
    INIT
    ===================================================================== */
 loadPrefs();
-syncToggles();
 selectLook(state.look);
 setMode('photo');
 if(window.innerWidth >= 900) setPanel(true);
-if(document.fonts && document.fonts.load){ document.fonts.load('40px VT323').catch(() => {}); }
+if(document.fonts && document.fonts.load){
+  Promise.all([document.fonts.load('40px VT323'), document.fonts.load('600 40px "Chakra Petch"')])
+    .then(() => { osdVer++; }).catch(() => {});
+}
 requestAnimationFrame(loop);
 })();
 </script>
